@@ -1,28 +1,31 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using ContactList.Database;
 using ContactList.Models;
 
 namespace ContactList.Controllers;
 
 public class ContactController : Controller
 {
-    private readonly IContactRepository _repo;
+    private readonly ApplicationContext _context;
 
-    public ContactController(IContactRepository repo)
+    public ContactController(ApplicationContext context)
     {
-        _repo = repo;
+        _context = context;
     }
 
     // GET: /Contact
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View(_repo.GetAll());
+        var contacts = await _context.Contacts!.ToArrayAsync();
+        return View(contacts);
     }
 
     // GET: /Contact/Details/3
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var contact = _repo.GetById(id);
+        var contact = await _context.Contacts!.FindAsync(id);
         if (contact == null)
         {
             return NotFound();
@@ -33,29 +36,30 @@ public class ContactController : Controller
     // GET: /Contact/Create
     public IActionResult Create()
     {
-        ViewBag.Categories = new SelectList(_repo.GetCategories());
+        ViewBag.Categories = new SelectList(Contact.GetCategories());
         return View();
     }
 
     // POST: /Contact/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(Contact contact)
+    public async Task<IActionResult> Create(Contact contact)
     {
         if (ModelState.IsValid)
         {
-            _repo.Add(contact);
+            _context.Contacts!.Add(contact);
+            await _context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
-        ViewBag.Categories = new SelectList(_repo.GetCategories());
+        ViewBag.Categories = new SelectList(Contact.GetCategories());
         return View(contact);
     }
 
     // GET: /Contact/Delete/3
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var contact = _repo.GetById(id);
+        var contact = await _context.Contacts!.FindAsync(id);
         if (contact == null)
         {
             return NotFound();
@@ -66,9 +70,14 @@ public class ContactController : Controller
     // POST: /Contact/Delete/3
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        _repo.Remove(id);
+        var contact = await _context.Contacts!.FindAsync(id);
+        if (contact != null)
+        {
+            _context.Contacts!.Remove(contact);
+            await _context.SaveChangesAsync();
+        }
         return RedirectToAction("Index");
     }
 }
