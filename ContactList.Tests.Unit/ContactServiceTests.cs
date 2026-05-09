@@ -21,5 +21,19 @@ public class ContactServiceTests : IDisposable
         Assert.Empty(actual);
     }
 
+    [Fact]
+    public async Task SearchByNameAsync_EmptyDatabase_ReturnsEmpty()
+    {
+        // Arrange
+        var ctx = _ctxBuilder.Build();
+        var sut = new ContactService(ctx);
+
+        // Act 
+        var actual = await sut.SearchByNameAsync("Alice");
+
+        // Assert 
+        Assert.Empty(actual);
+    }
+
     public void Dispose() => _ctxBuilder.Dispose();
 }

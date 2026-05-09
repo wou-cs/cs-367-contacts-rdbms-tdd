@@ -31,4 +31,9 @@ public class ContactService : IContactService
             await _context.SaveChangesAsync();
         }
     }
+
+    public Task<IEnumerable<Contact>> SearchByNameAsync(string query)
+    {
+        return Task.FromResult(Enumerable.Empty<Contact>());
+    }
 }
