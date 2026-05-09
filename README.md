@@ -2,6 +2,17 @@
 
 A simple ASP.NET Core MVC app for managing contacts, backed by SQL Server via Entity Framework Core. Used in CS 367 to demonstrate TDD with a relational database.
 
+## Layout
+
+```
+.
+├── ContactList-Razor.sln
+├── ContactList-Razor/          # main web project
+└── ContactList.Tests.Unit/     # xUnit test project
+```
+
+All `dotnet` commands below assume you're in the **main project folder** (`ContactList-Razor/`) unless noted otherwise.
+
 ## Prerequisites
 
 - .NET 8 SDK
@@ -24,9 +35,10 @@ docker run -e "ACCEPT_EULA=Y" \
 
 The connection string is **not** stored in `appsettings.json` because it contains a password. Use [.NET User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) instead - secrets are stored in your home directory, outside the repo.
 
-From the project root:
+From inside `ContactList-Razor/`:
 
 ```bash
+cd ContactList-Razor
 dotnet user-secrets set "ConnectionStrings:ContactList" \
   "Server=localhost,1433;Database=ContactList;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
 ```
@@ -45,6 +57,7 @@ User Secrets only apply in the **Development** environment - so they won't accid
 ## First run
 
 ```bash
+cd ContactList-Razor
 dotnet run
 ```
 
@@ -57,8 +70,18 @@ Then browse to the URL shown in the console (typically `http://localhost:5273`).
 
 ## Working with migrations
 
+Run from inside `ContactList-Razor/`:
+
 ```bash
 dotnet ef migrations add <Name>     # add a new migration after changing the model
-dotnet ef database update            # apply pending migrations manually
-dotnet ef database drop --force      # nuke the database (handy when iterating)
+dotnet ef database update           # apply pending migrations manually
+dotnet ef database drop --force     # nuke the database (handy when iterating)
+```
+
+## Running the tests
+
+From the repo root or from inside `ContactList.Tests.Unit/`:
+
+```bash
+dotnet test
 ```
