@@ -1,36 +1,29 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using ContactList.Database;
 using ContactList.Models;
+using ContactList.Services;
 
 namespace ContactList.Controllers;
 
 public class ContactController : Controller
 {
-    private readonly ApplicationContext _context;
+    private readonly IContactService _service;
 
-    public ContactController(ApplicationContext context)
+    public ContactController(IContactService service)
     {
-        _context = context;
+        _service = service;
     }
 
     // GET: /Contact
     public async Task<IActionResult> Index()
     {
-        var contacts = await _context.Contacts!.ToArrayAsync();
-        return View(contacts);
+        return View(await _service.GetAllAsync());
     }
 
     // GET: /Contact/Details/3
     public async Task<IActionResult> Details(int id)
     {
-        var contact = await _context.Contacts!.FindAsync(id);
-        if (contact == null)
-        {
-            return NotFound();
-        }
-        return View(contact);
+        return await _service.GetByIdAsync(id) is { } c ? View(c) : NotFound();
     }
 
     // GET: /Contact/Create
@@ -45,26 +38,19 @@ public class ContactController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Contact contact)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            _context.Contacts!.Add(contact);
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
+            ViewBag.Categories = new SelectList(Contact.GetCategories());
+            return View(contact);
         }
-
-        ViewBag.Categories = new SelectList(Contact.GetCategories());
-        return View(contact);
+        await _service.AddAsync(contact);
+        return RedirectToAction(nameof(Index));
     }
 
     // GET: /Contact/Delete/3
     public async Task<IActionResult> Delete(int id)
     {
-        var contact = await _context.Contacts!.FindAsync(id);
-        if (contact == null)
-        {
-            return NotFound();
-        }
-        return View(contact);
+        return await _service.GetByIdAsync(id) is { } c ? View(c) : NotFound();
     }
 
     // POST: /Contact/Delete/3
@@ -72,12 +58,7 @@ public class ContactController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var contact = await _context.Contacts!.FindAsync(id);
-        if (contact != null)
-        {
-            _context.Contacts!.Remove(contact);
-            await _context.SaveChangesAsync();
-        }
-        return RedirectToAction("Index");
+        await _service.DeleteAsync(id);
+        return RedirectToAction(nameof(Index));
     }
 }
